@@ -1,0 +1,38 @@
+import org.gradle.internal.os.OperatingSystem
+
+pluginManagement {
+    repositories {
+        // Repositórios usados para localizar GradleRIO e dependências do build.
+        mavenLocal()
+        gradlePluginPortal()
+
+        // Ano da instalação local da WPILib usada como repositório Maven offline.
+        String frcYear = '2026'
+        File frcHome
+
+        // No Windows a WPILib fica normalmente em C:\Users\Public\wpilib\<ano>.
+        if (OperatingSystem.current().isWindows()) {
+            String publicFolder = System.getenv('PUBLIC')
+            if (publicFolder == null) {
+                publicFolder = "C:\\Users\\Public"
+            }
+            def homeRoot = new File(publicFolder, "wpilib")
+            frcHome = new File(homeRoot, frcYear)
+        } else {
+            // Em Linux/macOS, usa a pasta wpilib dentro do diretório do usuário.
+            def userFolder = System.getProperty("user.home")
+            def homeRoot = new File(userFolder, "wpilib")
+            frcHome = new File(homeRoot, frcYear)
+        }
+        def frcHomeMaven = new File(frcHome, 'maven')
+        maven {
+            // Permite compilar mesmo sem internet quando a instalação local da WPILib está completa.
+            name = 'frcHome'
+            url = frcHomeMaven
+        }
+    }
+}
+
+// Evita falha de resolução de headers nativos em alguns ambientes Gradle/WPILib.
+Properties props = System.getProperties();
+props.setProperty("org.gradle.internal.native.headers.unresolved.dependencies.ignore", "true");
